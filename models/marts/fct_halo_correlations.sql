@@ -1,7 +1,7 @@
 {{ config(materialized='table') }}
 
--- This model calculates cross-channel correlation coefficients
--- to measure the "halo effect" of paid media on marketplace sales
+-- Cross-channel correlation: Meta spend vs Amazon sales
+-- MercadoLibre correlation available via legacy system
 
 with daily_meta as (
     select
@@ -20,15 +20,6 @@ daily_amazon as (
     group by order_date
 ),
 
-daily_meli as (
-    select
-        order_date as date,
-        sum(gross_revenue) as meli_revenue,
-        count(*) as meli_orders
-    from {{ ref('stg_mercadolibre_orders') }}
-    group by order_date
-),
-
 -- Calculate correlations for different lag periods
 correlations as (
     -- Meta -> Amazon (3-day lag)
@@ -44,6 +35,19 @@ correlations as (
 
     union all
 
+    -- Meta -> Amazon (5-day lag)
+    select
+        'meta_ads' as source_channel,
+        'amazon' as target_channel,
+        5 as lag_days,
+        corr(m.meta_spend, a.amazon_revenue) as correlation,
+        regr_slope(a.amazon_revenue, m.meta_spend) as dollar_impact
+    from daily_meta m
+    join daily_amazon a on a.date = m.date + interval '5 days'
+    where m.meta_spend > 0
+
+    union all
+
     -- Meta -> Amazon (7-day lag)
     select
         'meta_ads' as source_channel,
@@ -54,32 +58,6 @@ correlations as (
     from daily_meta m
     join daily_amazon a on a.date = m.date + interval '7 days'
     where m.meta_spend > 0
-
-    union all
-
-    -- Meta -> MercadoLibre (5-day lag)
-    select
-        'meta_ads' as source_channel,
-        'mercadolibre' as target_channel,
-        5 as lag_days,
-        corr(m.meta_spend, l.meli_revenue) as correlation,
-        regr_slope(l.meli_revenue, m.meta_spend) as dollar_impact
-    from daily_meta m
-    join daily_meli l on l.date = m.date + interval '5 days'
-    where m.meta_spend > 0
-
-    union all
-
-    -- Meta -> MercadoLibre (7-day lag)
-    select
-        'meta_ads' as source_channel,
-        'mercadolibre' as target_channel,
-        7 as lag_days,
-        corr(m.meta_spend, l.meli_revenue) as correlation,
-        regr_slope(l.meli_revenue, m.meta_spend) as dollar_impact
-    from daily_meta m
-    join daily_meli l on l.date = m.date + interval '7 days'
-    where m.meta_spend > 0
 )
 
 select
@@ -87,7 +65,7 @@ select
     target_channel,
     lag_days,
     round(correlation::numeric, 2) as correlation,
-    round(dollar_impact::numeric, 2) as dollar_impact,
+    round(coalesce(dollar_impact, 0)::numeric, 2) as dollar_impact,
     case
         when abs(correlation) >= 0.7 then 'strong'
         when abs(correlation) >= 0.4 then 'moderate'

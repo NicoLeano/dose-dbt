@@ -1,7 +1,7 @@
 {{ config(materialized='view') }}
 
 with source as (
-    select * from {{ source('raw', 'meta_adcreatives') }}
+    select * from {{ source('raw', 'rawad_creativescbd25427cd3a238158c64d74da2fd4a8') }}
 ),
 
 renamed as (

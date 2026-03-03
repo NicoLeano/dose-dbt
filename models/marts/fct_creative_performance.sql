@@ -20,9 +20,10 @@ insights as (
 
 ads_to_creatives as (
     select
-        ad.id as ad_id,
-        ad.creative_id
-    from {{ source('raw', 'meta_ads') }} ad
+        id as ad_id,
+        creative->>'id' as creative_id
+    from {{ source('raw', 'rawadsf52608e9b8e7ffa9ed8b2b2dba082626') }}
+    where creative is not null
 ),
 
 joined as (
@@ -31,19 +32,19 @@ joined as (
         c.creative_name,
         c.thumbnail_url,
         c.creative_type,
-        i.total_spend as spend,
-        i.total_impressions as impressions,
-        i.total_clicks as clicks,
-        i.total_conversions as conversions,
-        i.total_revenue as revenue,
+        coalesce(i.total_spend, 0) as spend,
+        coalesce(i.total_impressions, 0) as impressions,
+        coalesce(i.total_clicks, 0) as clicks,
+        coalesce(i.total_conversions, 0) as conversions,
+        coalesce(i.total_revenue, 0) as revenue,
         -- Calculated metrics
-        case when i.total_spend > 0
-             then round(i.total_revenue / i.total_spend, 2)
+        case when coalesce(i.total_spend, 0) > 0
+             then round(coalesce(i.total_revenue, 0) / i.total_spend, 2)
              else 0 end as roas,
-        case when i.total_conversions > 0
+        case when coalesce(i.total_conversions, 0) > 0
              then round(i.total_spend / i.total_conversions, 2)
              else 0 end as cpa,
-        case when i.total_impressions > 0
+        case when coalesce(i.total_impressions, 0) > 0
              then round(i.total_clicks::numeric / i.total_impressions * 100, 2)
              else 0 end as ctr,
         i.first_active,
@@ -51,8 +52,9 @@ joined as (
         case when i.last_active >= current_date - interval '7 days'
              then 'active' else 'inactive' end as status
     from creatives c
-    join ads_to_creatives atc on c.creative_id = atc.creative_id
-    join insights i on atc.ad_id = i.ad_id
+    left join ads_to_creatives atc on c.creative_id = atc.creative_id
+    left join insights i on atc.ad_id = i.ad_id
+    where c.creative_id is not null
 )
 
 select * from joined

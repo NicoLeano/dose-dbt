@@ -1,6 +1,6 @@
 {{ config(materialized='table') }}
 
--- Daily P&L combining all platforms
+-- Daily P&L combining Shopify and Amazon (MercadoLibre via legacy system)
 
 with shopify_daily as (
     select
@@ -24,17 +24,6 @@ amazon_daily as (
     group by order_date
 ),
 
-meli_daily as (
-    select
-        order_date as date,
-        sum(gross_revenue) as gross_revenue,
-        sum(discounts) as discounts,
-        count(*) as orders,
-        'mercadolibre' as platform
-    from {{ ref('stg_mercadolibre_orders') }}
-    group by order_date
-),
-
 meta_daily as (
     select
         insight_date as date,
@@ -47,8 +36,6 @@ all_revenue as (
     select * from shopify_daily
     union all
     select * from amazon_daily
-    union all
-    select * from meli_daily
 ),
 
 aggregated as (

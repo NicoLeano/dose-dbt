@@ -5,12 +5,44 @@ sources:
     database: postgres
     schema: raw
     tables:
-      - name: shopify_orders
-      - name: shopify_transactions
-      - name: meta_ads
-      - name: meta_adcreatives
-      - name: meta_ads_insights
-      - name: amazon_orders
-      - name: mercadolibre_orders
-      - name: stripe_charges
-      - name: tiktok_samples
+      # Shopify
+      - name: orders
+        description: Shopify orders
+      - name: transactions
+        description: Shopify transactions
+      - name: order_refunds
+        description: Shopify refunds
+      - name: products
+        description: Shopify products
+      - name: customers
+        description: Shopify customers
+
+      # Meta Ads (Airbyte hashed names)
+      - name: rawadsf52608e9b8e7ffa9ed8b2b2dba082626
+        identifier: rawadsf52608e9b8e7ffa9ed8b2b2dba082626
+        description: Meta ads
+      - name: rawad_creativescbd25427cd3a238158c64d74da2fd4a8
+        identifier: rawad_creativescbd25427cd3a238158c64d74da2fd4a8
+        description: Meta ad creatives
+      - name: rawads_insightsf1bcd7014f92bb079e62eb151ae93bb3
+        identifier: rawads_insightsf1bcd7014f92bb079e62eb151ae93bb3
+        description: Meta ads insights
+      - name: rawcampaignsfd327e03cb8fd49269d7a4647c3f7d65
+        identifier: rawcampaignsfd327e03cb8fd49269d7a4647c3f7d65
+        description: Meta campaigns
+
+      # Amazon Seller
+      - name: GET_AMAZON_FULFILLED_SHIPMENTS_DATA_GENERAL
+        description: Amazon fulfilled shipments (orders)
+      - name: GET_ORDER_REPORT_DATA_SHIPPING
+        description: Amazon orders (alternative)
+      - name: GET_V2_SETTLEMENT_REPORT_DATA_FLAT_FILE
+        description: Amazon settlement/fees
+      - name: ListFinancialEvents
+        description: Amazon financial events
+
+      # Amazon Ads
+      - name: sponsored_products_campaigns_report_stream_daily
+        description: Amazon Sponsored Products daily report
+      - name: sponsored_brands_v3_report_stream_daily
+        description: Amazon Sponsored Brands daily report

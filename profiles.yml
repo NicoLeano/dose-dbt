@@ -3,10 +3,10 @@ dose_analytics:
   outputs:
     prod:
       type: postgres
-      host: "{{ env_var('SUPABASE_HOST') }}"
+      host: aws-1-us-east-2.pooler.supabase.com
       port: 5432
-      user: postgres
+      user: "postgres.foxgsdzhvcmcydujjoit"
       password: "{{ env_var('SUPABASE_PASSWORD') }}"
       dbname: postgres
-      schema: staging
+      schema: public
       threads: 4
