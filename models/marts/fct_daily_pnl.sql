@@ -21,6 +21,14 @@ shopify_cogs as (
     group by order_date
 ),
 
+shopify_refunds as (
+    select
+        refund_date as date,
+        sum(refund_amount) as returns
+    from {{ ref('stg_shopify_refunds') }}
+    group by refund_date
+),
+
 amazon_daily as (
     select
         order_date as date,
@@ -43,13 +51,16 @@ meta_daily as (
 all_revenue as (
     select
         s.*,
-        coalesce(c.cogs, 0) as cogs
+        coalesce(c.cogs, 0) as cogs,
+        coalesce(rf.returns, 0) as returns
     from shopify_daily s
     left join shopify_cogs c on s.date = c.date
+    left join shopify_refunds rf on s.date = rf.date
     union all
     select
         a.*,
-        0 as cogs  -- Amazon COGS not yet implemented
+        0 as cogs,    -- Amazon COGS not yet implemented
+        0 as returns  -- Amazon returns not yet implemented
     from amazon_daily a
 ),
 
@@ -59,13 +70,14 @@ aggregated as (
         r.platform,
         r.gross_revenue,
         r.discounts,
+        r.returns,
         r.orders,
         r.cogs,
-        -- Calculate net revenue (gross - discounts)
-        r.gross_revenue - r.discounts as net_revenue,
-        -- IVA is 16% included in gross
-        round((r.gross_revenue - r.discounts) / (1 + {{ var('iva_rate') }}), 2) as revenue_ex_iva,
-        round((r.gross_revenue - r.discounts) - (r.gross_revenue - r.discounts) / (1 + {{ var('iva_rate') }}), 2) as iva_collected
+        -- Calculate net revenue (gross - discounts - returns)
+        r.gross_revenue - r.discounts - r.returns as net_revenue,
+        -- IVA is 16% included in net revenue
+        round((r.gross_revenue - r.discounts - r.returns) / (1 + {{ var('iva_rate') }}), 2) as revenue_ex_iva,
+        round((r.gross_revenue - r.discounts - r.returns) - (r.gross_revenue - r.discounts - r.returns) / (1 + {{ var('iva_rate') }}), 2) as iva_collected
     from all_revenue r
 )
 
@@ -74,6 +86,7 @@ select
     a.platform,
     a.gross_revenue,
     a.discounts,
+    a.returns,
     a.net_revenue,
     a.revenue_ex_iva,
     a.iva_collected,
