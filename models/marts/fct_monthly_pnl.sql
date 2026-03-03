@@ -17,9 +17,9 @@ monthly as (
         sum(iva_collected) as iva_collected,
         sum(orders) as orders,
         sum(meta_ad_spend) as meta_ad_spend,
-        -- Calculate AOV
+        -- Calculate AOV (gross revenue per order)
         case when sum(orders) > 0
-             then round(sum(net_revenue) / sum(orders), 2)
+             then round(sum(gross_revenue) / sum(orders), 2)
              else 0 end as aov
     from daily
     group by date_trunc('month', date), platform
@@ -37,7 +37,7 @@ totals as (
         sum(orders) as orders,
         sum(meta_ad_spend) as meta_ad_spend,
         case when sum(orders) > 0
-             then round(sum(net_revenue) / sum(orders), 2)
+             then round(sum(gross_revenue) / sum(orders), 2)
              else 0 end as aov
     from monthly
     group by month
