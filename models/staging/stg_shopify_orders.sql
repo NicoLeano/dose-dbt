@@ -17,8 +17,10 @@ renamed as (
         order_number,
         ((created_at::timestamp - interval '6 hours'))::date as order_date,
         financial_status as status,
-        -- Gross Revenue = subtotal + shipping (discounts separate)
+        -- Gross Revenue = subtotal + discounts (to get original prices) + shipping
+        -- Note: subtotal_price is AFTER line-item discounts, so we add them back
         coalesce(subtotal_price::numeric, 0) +
+            coalesce(total_discounts::numeric, 0) +
             coalesce((total_shipping_price_set->'shop_money'->>'amount')::numeric, 0) as gross_revenue,
         coalesce(total_discounts::numeric, 0) as discounts,
         coalesce((total_shipping_price_set->'shop_money'->>'amount')::numeric, 0) as shipping,
