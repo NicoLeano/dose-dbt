@@ -1,0 +1,12 @@
+dose_analytics:
+  target: prod
+  outputs:
+    prod:
+      type: postgres
+      host: "{{ env_var('SUPABASE_HOST') }}"
+      port: 5432
+      user: postgres
+      password: "{{ env_var('SUPABASE_PASSWORD') }}"
+      dbname: postgres
+      schema: staging
+      threads: 4

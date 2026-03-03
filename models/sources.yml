@@ -1,0 +1,16 @@
+version: 2
+
+sources:
+  - name: raw
+    database: postgres
+    schema: raw
+    tables:
+      - name: shopify_orders
+      - name: shopify_transactions
+      - name: meta_ads
+      - name: meta_adcreatives
+      - name: meta_ads_insights
+      - name: amazon_orders
+      - name: mercadolibre_orders
+      - name: stripe_charges
+      - name: tiktok_samples
