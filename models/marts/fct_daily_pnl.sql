@@ -13,6 +13,14 @@ with shopify_daily as (
     group by order_date
 ),
 
+shopify_cogs as (
+    select
+        order_date as date,
+        sum(line_cogs) as cogs
+    from {{ ref('stg_shopify_line_items') }}
+    group by order_date
+),
+
 amazon_daily as (
     select
         order_date as date,
@@ -33,9 +41,16 @@ meta_daily as (
 ),
 
 all_revenue as (
-    select * from shopify_daily
+    select
+        s.*,
+        coalesce(c.cogs, 0) as cogs
+    from shopify_daily s
+    left join shopify_cogs c on s.date = c.date
     union all
-    select * from amazon_daily
+    select
+        a.*,
+        0 as cogs  -- Amazon COGS not yet implemented
+    from amazon_daily a
 ),
 
 aggregated as (
@@ -45,6 +60,7 @@ aggregated as (
         r.gross_revenue,
         r.discounts,
         r.orders,
+        r.cogs,
         -- Calculate net revenue (gross - discounts)
         r.gross_revenue - r.discounts as net_revenue,
         -- IVA is 16% included in gross
@@ -62,6 +78,7 @@ select
     a.revenue_ex_iva,
     a.iva_collected,
     a.orders,
+    a.cogs,
     coalesce(m.ad_spend, 0) as meta_ad_spend
 from aggregated a
 left join meta_daily m on a.date = m.date and a.platform = 'shopify'

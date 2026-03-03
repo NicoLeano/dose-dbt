@@ -16,6 +16,7 @@ monthly as (
         sum(revenue_ex_iva) as revenue_ex_iva,
         sum(iva_collected) as iva_collected,
         sum(orders) as orders,
+        sum(cogs) as cogs,
         sum(meta_ad_spend) as meta_ad_spend,
         -- Calculate AOV (gross revenue per order)
         case when sum(orders) > 0
@@ -35,6 +36,7 @@ totals as (
         sum(revenue_ex_iva) as revenue_ex_iva,
         sum(iva_collected) as iva_collected,
         sum(orders) as orders,
+        sum(cogs) as cogs,
         sum(meta_ad_spend) as meta_ad_spend,
         case when sum(orders) > 0
              then round(sum(gross_revenue) / sum(orders), 2)
