@@ -1,0 +1,50 @@
+version: 2
+
+models:
+  - name: stg_shopify_orders
+    description: Cleaned Shopify orders, paid only, excluding cancelled
+    columns:
+      - name: order_id
+        description: Shopify order ID
+        tests:
+          - unique
+          - not_null
+      - name: source_row_id
+        description: Dedup key for idempotent syncs
+        tests:
+          - unique
+
+  - name: stg_meta_creatives
+    description: Meta ad creatives with thumbnails and copy
+    columns:
+      - name: creative_id
+        description: Meta creative ID
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_meta_insights
+    description: Daily Meta ad performance metrics
+    columns:
+      - name: ad_id
+        description: Meta ad ID
+        tests:
+          - not_null
+
+  - name: stg_amazon_orders
+    description: Amazon orders excluding cancelled/pending
+    columns:
+      - name: order_id
+        description: Amazon order ID
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_mercadolibre_orders
+    description: MercadoLibre orders excluding cancelled
+    columns:
+      - name: order_id
+        description: MercadoLibre order ID
+        tests:
+          - unique
+          - not_null

@@ -1,0 +1,36 @@
+name: dbt Daily Run
+
+on:
+  schedule:
+    - cron: '0 14 * * *'  # 8am Mexico City
+  workflow_dispatch:
+
+jobs:
+  dbt:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dbt
+        run: pip install dbt-postgres
+
+      - name: Run dbt
+        run: |
+          dbt deps
+          dbt seed --target prod
+          dbt run --target prod
+          dbt test --target prod
+        env:
+          SUPABASE_HOST: ${{ secrets.SUPABASE_HOST }}
+          SUPABASE_PASSWORD: ${{ secrets.SUPABASE_PASSWORD }}
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "dbt run failed - check logs"

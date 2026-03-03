@@ -1,0 +1,53 @@
+version: 2
+
+models:
+  - name: fct_creative_performance
+    description: Meta ad creative performance with ROAS, CPA, CTR metrics
+    columns:
+      - name: creative_id
+        description: Meta creative ID
+        tests:
+          - unique
+          - not_null
+      - name: roas
+        description: Return on ad spend (revenue / spend)
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: cpa
+        description: Cost per acquisition
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+  - name: fct_halo_correlations
+    description: Cross-channel correlation analysis for halo effect measurement
+    columns:
+      - name: correlation
+        description: Pearson correlation coefficient (-1 to 1)
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: -1
+              max_value: 1
+
+  - name: fct_daily_pnl
+    description: Daily P&L by platform
+    columns:
+      - name: date
+        tests:
+          - not_null
+      - name: platform
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['shopify', 'amazon', 'mercadolibre']
+
+  - name: fct_monthly_pnl
+    description: Monthly P&L summary by platform and total
+    columns:
+      - name: month
+        tests:
+          - not_null
+      - name: platform
+        tests:
+          - not_null
